@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="text/javascript">
+        (function () {
+            var myConnector = tableau.makeConnector();
+
+            // Define the schema (data structure)
+            myConnector.getSchema = function (schemaCallback) {
+                var cols = [{
+                    id: "indicator",
+                    alias: "Indicator",
+                    dataType: tableau.dataTypeEnum.string
+                }, {
+                    id: "value",
+                    alias: "Value",
+                    dataType: tableau.dataTypeEnum.float
+                }, {
+                    id: "date",
+                    alias: "Date",
+                    dataType: tableau.dataTypeEnum.string
+                }];
+                var tableSchema = {
+                    id: "economicData",
+                    alias: "Economic Data from IMF/World Bank",
+                    columns: cols
+                };
+                schemaCallback([tableSchema]);
+            };
+
+            // Fetch the data from the API
+            myConnector.getData = function (table, doneCallback) {
+                var apiUrl = "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json";
+                $.getJSON(apiUrl, function (data) {
+                    var tableData = [];
+
+                    // Parse and push data into tableData array
+                    for (var i = 1; i < data[1].length; i++) {
+                        tableData.push({
+                            "indicator": data[1][i].indicator.value,
+                            "value": data[1][i].value,
+                            "date": data[1][i].date
+                        });
+                    }
+                    table.appendRows(tableData);
+                    doneCallback();
+                });
+            };
+
+            tableau.registerConnector(myConnector);
+
+            // Fetch the data when user clicks 'Get Data'
+            $(document).ready(function () {
+                $("#submitButton").click(function () {
+                    tableau.connectionName = "IMF and World Bank Data";
+                    tableau.submit();
+                });
+            });
+        })();
+    </script>
+</head>
+<body>
+    <h1>World Bank Data Connector</h1>
+    <button id="submitButton">Get Data</button>
+</body>
+</html>
