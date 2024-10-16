@@ -21,6 +21,10 @@
             alias: "Unit",
             dataType: tableau.dataTypeEnum.string
         }, {
+            id: "source",
+            alias: "Source",
+            dataType: tableau.dataTypeEnum.string
+        }, {
             id: "dataset",
             alias: "Dataset",
             dataType: tableau.dataTypeEnum.string
@@ -37,26 +41,31 @@
 
     // Download the data
     myConnector.getData = function (table, doneCallback) {
-        var apiUrl = "https://www.imf.org/external/datamapper/api/v1/indicators";
+        var apiUrl = "https://example.com/path/to/imf/api"; // Replace with actual API URL
         
         console.log("Fetching data from API:", apiUrl);
 
         $.getJSON(apiUrl, function (data) {
+            var indicators = data.indicators;
             var tableData = [];
 
             // Log the response structure for debugging
             console.log("API Response:", data);
 
             // Iterate over the JSON object to populate table rows
-            $.each(data, function (key, value) {
-                tableData.push({
-                    "id": key,
-                    "label": value.label,
-                    "description": value.description,
-                    "unit": value.unit,
-                    "dataset": value.dataset
-                });
-            });
+            for (var key in indicators) {
+                if (indicators.hasOwnProperty(key)) {
+                    var indicator = indicators[key];
+                    tableData.push({
+                        "id": key,
+                        "label": indicator.label,
+                        "description": indicator.description,
+                        "unit": indicator.unit,
+                        "source": indicator.source,
+                        "dataset": indicator.dataset
+                    });
+                }
+            }
 
             console.log("Parsed Table Data:", tableData);
             table.appendRows(tableData);
