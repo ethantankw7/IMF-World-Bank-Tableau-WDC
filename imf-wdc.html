@@ -42,8 +42,15 @@
             // Fetch the data from IMF API
             myConnector.getData = function (table, doneCallback) {
                 var apiUrl = "https://www.imf.org/external/datamapper/api/v1/indicators";
+                
+                // Log that we are trying to fetch the data
+                console.log("Fetching data from API:", apiUrl);
+
                 $.getJSON(apiUrl, function (data) {
                     var tableData = [];
+
+                    // Log the entire response to verify the structure
+                    console.log("API response:", data);
 
                     // Process data from IMF API and push it into the table
                     $.each(data, function (key, value) {
@@ -56,8 +63,14 @@
                         });
                     });
 
+                    // Log the parsed table data
+                    console.log("Parsed Table Data:", tableData);
+
                     table.appendRows(tableData);
                     doneCallback();
+                }).fail(function(jqXHR, textStatus, errorThrown) {
+                    // Log any error that occurs during the API request
+                    console.error("API request failed:", textStatus, errorThrown);
                 });
             };
 
