@@ -41,7 +41,7 @@
 
     // Download the data
     myConnector.getData = function (table, doneCallback) {
-        var apiUrl = "https://example.com/path/to/imf/api"; // Replace with actual API URL
+        var apiUrl = "https://www.imf.org/external/datamapper/api/v1/indicators"; // Replace with actual API URL
         
         console.log("Fetching data from API:", apiUrl);
 
