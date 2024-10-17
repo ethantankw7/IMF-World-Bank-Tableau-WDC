@@ -4,84 +4,70 @@
 
     // Define the schema
     myConnector.getSchema = function (schemaCallback) {
-        var cols = [{
-            id: "id",
-            alias: "Indicator ID",
-            dataType: tableau.dataTypeEnum.string
-        }, {
-            id: "label",
-            alias: "Indicator Label",
-            dataType: tableau.dataTypeEnum.string
-        }, {
-            id: "description",
-            alias: "Description",
-            dataType: tableau.dataTypeEnum.string
-        }, {
-            id: "unit",
-            alias: "Unit",
-            dataType: tableau.dataTypeEnum.string
-        }, {
-            id: "source",
-            alias: "Source",
-            dataType: tableau.dataTypeEnum.string
-        }, {
-            id: "dataset",
-            alias: "Dataset",
-            dataType: tableau.dataTypeEnum.string
-        }];
+        var cols = [
+            { id: "label", dataType: tableau.dataTypeEnum.string },
+            { id: "description", alias: "Description", dataType: tableau.dataTypeEnum.string },
+            { id: "source", alias: "Source", dataType: tableau.dataTypeEnum.string },
+            { id: "unit", alias: "Unit", dataType: tableau.dataTypeEnum.string },
+            { id: "dataset", alias: "Dataset", dataType: tableau.dataTypeEnum.string }
+        ];
 
         var tableSchema = {
             id: "imfIndicators",
-            alias: "IMF Economic Indicators",
+            alias: "IMF Economic Indicators Data",
             columns: cols
         };
 
         schemaCallback([tableSchema]);
     };
 
-    // Download the data
+    // Download the data from IMF API
     myConnector.getData = function (table, doneCallback) {
-        var apiUrl = "https://www.imf.org/external/datamapper/api/v1/indicators"; // Replace with actual API URL
-        
-        console.log("Fetching data from API:", apiUrl);
+        var apiUrl = "https://www.imf.org/external/datamapper/api/v1/indicators";
 
-        $.getJSON(apiUrl, function (data) {
-            var indicators = data.indicators;
-            var tableData = [];
-
-            // Log the response structure for debugging
-            console.log("API Response:", data);
-
-            // Iterate over the JSON object to populate table rows
-            for (var key in indicators) {
-                if (indicators.hasOwnProperty(key)) {
-                    var indicator = indicators[key];
-                    tableData.push({
-                        "id": key,
-                        "label": indicator.label,
-                        "description": indicator.description,
-                        "unit": indicator.unit,
-                        "source": indicator.source,
-                        "dataset": indicator.dataset
-                    });
-                }
+        $.getJSON(apiUrl, function (resp) {
+            if (!resp || !resp.data) {
+                console.error("Invalid response from API");
+                return;
             }
 
-            console.log("Parsed Table Data:", tableData);
+            var feat = resp.data,
+                tableData = [];
+
+            // Iterate over the response object and structure data for Tableau
+            for (var i = 0, len = feat.length; i < len; i++) {
+                tableData.push({
+                    "label": feat[i].label || "N/A",
+                    "description": feat[i].description || "N/A",
+                    "source": feat[i].source || "N/A",
+                    "unit": feat[i].unit || "N/A",
+                    "dataset": feat[i].dataset || "N/A"
+                });
+            }
+
             table.appendRows(tableData);
             doneCallback();
-        }).fail(function (jqXHR, textStatus, errorThrown) {
-            console.error("API request failed:", textStatus, errorThrown);
+        }).fail(function () {
+            console.error("Error fetching data from API");
         });
     };
 
     tableau.registerConnector(myConnector);
 
-    // Create event listeners for when the user submits the form
+    // Ensure Tableau is initialized before submitting the data
     $(document).ready(function () {
+        tableau.init({
+            onFirstInteractive: function () {
+                console.log("Tableau WDC Initialized");
+                $("#submitButton").prop('disabled', false);
+            }
+        });
+
+        // Submit the connector when the button is clicked
         $("#submitButton").click(function () {
-            tableau.connectionName = "IMF Economic Indicators"; // This will be the data source name in Tableau
-            tableau.submit(); // This sends the connector object to Tableau
+            tableau.connectionName = "IMF Economic Indicators";
+            tableau.submit();
         });
     });
 })();
+
