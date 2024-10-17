@@ -1,59 +1,27 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+
 <head>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-    <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js"></script>
-    <script type="text/javascript">
-        (function () {
-            var myConnector = tableau.makeConnector();
-
-            // Define the schema (data structure)
-            myConnector.getSchema = function (schemaCallback) {
-                var cols = [{
-                    id: "indicator",
-                    alias: "Indicator",
-                    dataType: tableau.dataTypeEnum.string
-                }, {
-                    id: "value",
-                    alias: "Value",
-                    dataType: tableau.dataTypeEnum.float
-                }, {
-                    id: "date",
-                    alias: "Date",
-                    dataType: tableau.dataTypeEnum.string
-                }];
-                var tableSchema = {
-                    id: "testData",
-                    alias: "Test Data",
-                    columns: cols
-                };
-                schemaCallback([tableSchema]);
-            };
-
-            // Mock data for testing purposes
-            myConnector.getData = function (table, doneCallback) {
-                var tableData = [
-                    { "indicator": "Test Indicator 1", "value": 1234.56, "date": "2024" },
-                    { "indicator": "Test Indicator 2", "value": 7890.12, "date": "2023" }
-                ];
-
-                table.appendRows(tableData);
-                doneCallback();
-            };
-
-            tableau.registerConnector(myConnector);
-
-            $(document).ready(function () {
-                $("#submitButton").click(function () {
-                    tableau.connectionName = "Test Data Connection";
-                    tableau.submit();
-                });
-            });
-        })();
-    </script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Bank Data Feed</title>
+    <meta http-equiv="Cache-Control" content="no-store" />
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" crossorigin="anonymous">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js" type="text/javascript"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" crossorigin="anonymous"></script>
+    <script src="https://connectors.tableau.com/libs/tableauwdc-2.3.latest.js" type="text/javascript"></script>
+    <script src="world_bank.js" type="text/javascript"></script>
 </head>
+
 <body>
-    <h1>Test Web Data Connector</h1>
-    <button id="submitButton">Get Test Data</button>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-12 text-center">
+                <h1>World Bank Indicators</h1>
+                <button id="submitButton" class="btn btn-primary">Fetch World Bank Data</button>
+            </div>
+        </div>
+    </div>
 </body>
+
 </html>
