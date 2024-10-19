@@ -1,8 +1,6 @@
 (function () {
-    // Create the connector object
     var myConnector = tableau.makeConnector();
 
-    // Define the schema
     myConnector.getSchema = function (schemaCallback) {
         var cols = [
             { id: "indicator", dataType: tableau.dataTypeEnum.string },
@@ -24,46 +22,36 @@
         schemaCallback([tableSchema]);
     };
 
-    // Download the data from the World Bank API
     myConnector.getData = function (table, doneCallback) {
-        var apiUrl = "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=xml"; // Fetch XML data
+        var apiUrl = "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json";
 
         $.ajax({
             url: apiUrl,
             type: 'GET',
-            dataType: 'xml',
+            dataType: 'json',
             success: function (data) {
                 var tableData = [];
+                var entries = data[1]; // The second element contains the data array
 
-                // Iterate over the <wb:data> elements in the XML response
-                $(data).find("data").each(function () {
-                    var indicator = $(this).find("indicator").text();
-                    var country = $(this).find("country").text();
-                    var countryiso3code = $(this).find("countryiso3code").text();
-                    var date = $(this).find("date").text();
-                    var value = $(this).find("value").text();
-                    var unit = $(this).find("unit").text();
-                    var obs_status = $(this).find("obs_status").text();
-                    var decimal = parseInt($(this).find("decimal").text());
-
-                    // Push the data into the array
+                // Iterate over the data entries
+                entries.forEach(function (entry) {
                     tableData.push({
-                        "indicator": indicator,
-                        "country": country,
-                        "countryiso3code": countryiso3code,
-                        "date": date ? new Date(date) : null,
-                        "value": value ? parseFloat(value) : null,
-                        "unit": unit,
-                        "obs_status": obs_status,
-                        "decimal": decimal
+                        "indicator": entry.indicator.value,
+                        "country": entry.country.value,
+                        "countryiso3code": entry.countryiso3code,
+                        "date": entry.date ? new Date(entry.date) : null,
+                        "value": entry.value !== null ? parseFloat(entry.value) : null,
+                        "unit": entry.unit || "",
+                        "obs_status": entry.obs_status || "",
+                        "decimal": entry.decimal || 0
                     });
                 });
 
                 table.appendRows(tableData);
                 doneCallback();
             },
-            error: function () {
-                console.error("Error fetching data from API");
+            error: function (jqXHR, textStatus, errorThrown) {
+                console.error("Error fetching data from API", textStatus, errorThrown);
                 doneCallback();
             }
         });
@@ -71,11 +59,10 @@
 
     tableau.registerConnector(myConnector);
 
-    // Create event listeners for when the user submits the form
     $(document).ready(function () {
         $("#submitButton").click(function () {
-            tableau.connectionName = "World Bank Population Data"; // This will be the data source name in Tableau
-            tableau.submit(); // This sends the connector object to Tableau
+            tableau.connectionName = "World Bank Population Data";
+            tableau.submit();
         });
     });
 })();
