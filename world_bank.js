@@ -39,7 +39,7 @@
                         "indicator": entry.indicator.value,
                         "country": entry.country.value,
                         "countryiso3code": entry.countryiso3code,
-                        "date": entry.date ? new Date(entry.date) : null,
+                        "date": entry.date ? new Date(entry.date).getFullYear() : null,
                         "value": entry.value !== null ? parseFloat(entry.value) : null,
                         "unit": entry.unit || "",
                         "obs_status": entry.obs_status || "",
