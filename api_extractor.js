@@ -4,8 +4,7 @@
 
     // Define the schema
     myConnector.getSchema = function (schemaCallback) {
-        // IMF Economic Indicators Schema
-        var imfCols = [
+        var cols = [
             { id: "label", dataType: tableau.dataTypeEnum.string },
             { id: "description", alias: "Description", dataType: tableau.dataTypeEnum.string },
             { id: "source", alias: "Source", dataType: tableau.dataTypeEnum.string },
@@ -17,14 +16,13 @@
             { id: "value", dataType: tableau.dataTypeEnum.float }
         ];
 
-        var imfTableSchema = {
-            id: "imfIndicators",
-            alias: "IMF Economic Indicators Data",
-            columns: imfCols
+        var tableSchema = {
+            id: "economicIndicators",
+            alias: "IMF and World Bank Economic Indicators Data",
+            columns: cols
         };
 
-        // Register the schema for IMF
-        schemaCallback([imfTableSchema]);
+        schemaCallback([tableSchema]);
     };
 
     // Download data from IMF and World Bank APIs
@@ -32,22 +30,21 @@
         var imfApiUrl = "https://www.imf.org/external/datamapper/api/v1/indicators";
         var wbApiBaseUrl = "https://api.worldbank.org/v2/country/all/indicator/";
 
-        var imfDataFetched = false;
         var tableData = [];
 
-        // Fetch IMF data
+        // Fetch IMF indicators
         $.getJSON(imfApiUrl, function (resp) {
             if (!resp || !resp.data) {
                 console.error("Invalid response from IMF API");
-                doneCallback(); // Ensure doneCallback is always called
+                doneCallback();
                 return;
             }
 
             var indicators = resp.data;
 
-            // Parse IMF data for each indicator
+            // Create a list of promises to fetch data for all indicators
             var fetchPromises = indicators.map(function (indicator) {
-                var indicatorUrl = `${wbApiBaseUrl}${indicator.key}?format=json&date=2000:2020`;
+                var indicatorUrl = `${wbApiBaseUrl}${indicator.key}?format=json&date=2000:2020`; // Adjust date range as needed
 
                 return $.getJSON(indicatorUrl).then(function (wbData) {
                     if (wbData && wbData[1]) {
@@ -76,7 +73,6 @@
             // Wait for all fetch requests to complete
             $.when.apply($, fetchPromises).done(function () {
                 table.appendRows(tableData);
-                imfDataFetched = true;
                 doneCallback(); // Call the callback after all requests complete
             });
         }).fail(function () {
@@ -93,7 +89,7 @@
 
         // Register event listener for the submit button
         $("#submitButton").click(function () {
-            tableau.connectionName = "IMF and World Bank Data"; // Set data source name
+            tableau.connectionName = "IMF and World Bank Economic Indicators"; // Set data source name
             tableau.submit(); // This sends the connector object to Tableau
         });
 
