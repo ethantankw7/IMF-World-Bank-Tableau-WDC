@@ -2,7 +2,7 @@
     // Create the connector object
     var myConnector = tableau.makeConnector();
 
-    // Define the schema
+    // Define the schema for Tableau
     myConnector.getSchema = function (schemaCallback) {
         var cols = [
             { id: "label", dataType: tableau.dataTypeEnum.string },
