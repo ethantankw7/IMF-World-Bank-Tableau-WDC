@@ -18,7 +18,6 @@
             { id: "infant_mortality", alias: "Infant Mortality Rate", dataType: tableau.dataTypeEnum.float },
             { id: "maternal_mortality", alias: "Maternal Mortality Ratio", dataType: tableau.dataTypeEnum.float },
             { id: "poverty_rate", alias: "Poverty Rate", dataType: tableau.dataTypeEnum.float },
-            { id: "public_debt", alias: "Public Debt (% of GDP)", dataType: tableau.dataTypeEnum.float },
             { id: "access_to_electricity", alias: "Access to Electricity (%)", dataType: tableau.dataTypeEnum.float },
             { id: "employment_population_ratio", alias: "Employment to Population Ratio", dataType: tableau.dataTypeEnum.float },
 ];
@@ -68,7 +67,6 @@
             infant_mortality: "https://api.worldbank.org/v2/country/{country}/indicator/SH.DYN.MORT?date=2000:2022&format=json",
             maternal_mortality: "https://api.worldbank.org/v2/country/{country}/indicator/SH.STA.MMRT?date=2000:2022&format=json",
             poverty_rate: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2022&format=json",
-            public_debt: "https://api.worldbank.org/v2/country/{country}/indicator/GC.DOD.TOTL.GD.ZS?date=2000:2022&format=json",
             access_to_electricity: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2022&format=json",
             employment_population_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.EMP.TOTL.SP.ZS?date=2000:2022&format=json",
 };
@@ -110,7 +108,6 @@
                     infant_mortality: null,
                     maternal_mortality: null,
                     poverty_rate: null,
-                    public_debt: null,
                     access_to_electricity: null,
                     employment_population_ratio: null,
                     
