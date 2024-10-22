@@ -4,23 +4,19 @@
     // Schema definition for the data being pulled from IMF and World Bank
     myConnector.getSchema = function (schemaCallback) {
         var cols = [
-            { id: "label", dataType: tableau.dataTypeEnum.string },
-            { id: "description", alias: "Description", dataType: tableau.dataTypeEnum.string },
-            { id: "source", alias: "Source", dataType: tableau.dataTypeEnum.string },
-            { id: "unit", alias: "Unit", dataType: tableau.dataTypeEnum.string },
-            { id: "dataset", alias: "Dataset", dataType: tableau.dataTypeEnum.string },
-            { id: "indicator", alias: "Indicator", dataType: tableau.dataTypeEnum.string },
             { id: "country", dataType: tableau.dataTypeEnum.string },
             { id: "countryiso3code", dataType: tableau.dataTypeEnum.string },
             { id: "date", dataType: tableau.dataTypeEnum.int },
+            { id: "indicator", alias: "Indicator", dataType: tableau.dataTypeEnum.string },
             { id: "value", alias: "Value", dataType: tableau.dataTypeEnum.float },
-            { id: "obs_status", alias: "Observation Status", dataType: tableau.dataTypeEnum.string },
-            { id: "decimal", alias: "Decimal", dataType: tableau.dataTypeEnum.int }
+            { id: "source", alias: "Source", dataType: tableau.dataTypeEnum.string },
+            { id: "unit", alias: "Unit", dataType: tableau.dataTypeEnum.string },
+            { id: "dataset", alias: "Dataset", dataType: tableau.dataTypeEnum.string }
         ];
 
         var tableSchema = {
             id: "economicIndicators",
-            alias: "Economic Indicators Data",
+            alias: "Economic Indicators Data Combined",
             columns: cols
         };
 
@@ -61,20 +57,18 @@
             $.getJSON(url, function (imfData) {
                 if (imfData && imfData.data) {
                     imfData.data.forEach(function (indicator) {
-                        tableData.push({
-                            "label": indicator.label || "N/A",
-                            "description": indicator.description || "N/A",
-                            "source": "IMF",
-                            "unit": indicator.unit || "N/A",
-                            "dataset": "IMF",
-                            "indicator": indicator.label || "N/A",
-                            "country": "N/A",
-                            "countryiso3code": "N/A",
-                            "date": "N/A",
-                            "value": null,
-                            "obs_status": "N/A",
-                            "decimal": 0
-                        });
+                        if (indicator.country && indicator.date) {
+                            tableData.push({
+                                "country": indicator.country || "N/A",
+                                "countryiso3code": indicator.countryiso3code || "N/A",
+                                "date": parseInt(indicator.date) || null,
+                                "indicator": indicator.label || "N/A",
+                                "value": parseFloat(indicator.value) || null,
+                                "source": "IMF",
+                                "unit": indicator.unit || "N/A",
+                                "dataset": "IMF"
+                            });
+                        }
                     });
                 }
                 completedRequests++; // Increment on each successful request
@@ -95,20 +89,18 @@
                 success: function (wbData) {
                     if (wbData && wbData[1]) {
                         wbData[1].forEach(function (entry) {
-                            tableData.push({
-                                "label": "N/A",
-                                "description": "N/A",
-                                "source": "World Bank",
-                                "unit": entry.unit || "",
-                                "dataset": "World Bank",
-                                "indicator": entry.indicator.value,
-                                "country": entry.country.value,
-                                "countryiso3code": entry.countryiso3code,
-                                "date": entry.date ? parseInt(entry.date) : null,
-                                "value": entry.value !== null ? parseFloat(entry.value) : null,
-                                "obs_status": entry.obs_status || "",
-                                "decimal": entry.decimal || 0
-                            });
+                            if (entry.country && entry.date) {
+                                tableData.push({
+                                    "country": entry.country.value,
+                                    "countryiso3code": entry.countryiso3code,
+                                    "date": parseInt(entry.date),
+                                    "indicator": entry.indicator.value,
+                                    "value": entry.value !== null ? parseFloat(entry.value) : null,
+                                    "source": "World Bank",
+                                    "unit": entry.unit || "",
+                                    "dataset": "World Bank"
+                                });
+                            }
                         });
                     }
                     completedRequests++; // Increment on each successful request
