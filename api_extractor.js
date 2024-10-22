@@ -1,24 +1,24 @@
 (function () {
     var myConnector = tableau.makeConnector();
 
-    // Define the schema: country, year, and individual columns for each indicator
+    // Define the schema: country, year, and columns for each indicator
     myConnector.getSchema = function (schemaCallback) {
         var cols = [
             { id: "country", dataType: tableau.dataTypeEnum.string },
             { id: "countryiso3code", dataType: tableau.dataTypeEnum.string },
             { id: "date", dataType: tableau.dataTypeEnum.int },
-            { id: "gdp", alias: "GDP", dataType: tableau.dataTypeEnum.float },
-            { id: "cpi", alias: "CPI", dataType: tableau.dataTypeEnum.float },
-            { id: "debt", alias: "Debt", dataType: tableau.dataTypeEnum.float },
-            { id: "unemployment", alias: "Unemployment", dataType: tableau.dataTypeEnum.float },
-            { id: "population", alias: "Population", dataType: tableau.dataTypeEnum.float },
-            { id: "life_expectancy", alias: "Life Expectancy", dataType: tableau.dataTypeEnum.float },
-            { id: "primary_school_enrollment", alias: "Primary School Enrollment", dataType: tableau.dataTypeEnum.float }
+            { id: "public_debt", alias: "Public Debt (% of GDP)", dataType: tableau.dataTypeEnum.float },
+            { id: "gender_inequality", alias: "Gender Inequality Index", dataType: tableau.dataTypeEnum.float },
+            { id: "electricity_access", alias: "Access to Electricity (% of population)", dataType: tableau.dataTypeEnum.float },
+            { id: "poverty_headcount", alias: "Poverty Headcount Ratio", dataType: tableau.dataTypeEnum.float },
+            { id: "school_enrollment", alias: "School Enrollment Rate", dataType: tableau.dataTypeEnum.float },
+            { id: "employment_ratio", alias: "Employment to Population Ratio", dataType: tableau.dataTypeEnum.float },
+            { id: "corruption_perceptions", alias: "Corruption Perceptions Index", dataType: tableau.dataTypeEnum.float },
         ];
 
         var tableSchema = {
-            id: "economicIndicators",
-            alias: "Economic Indicators Data Combined",
+            id: "hdiFactors",
+            alias: "HDI Factors Data",
             columns: cols
         };
 
@@ -29,26 +29,26 @@
     myConnector.getData = function (table, doneCallback) {
         var masterData = {};
 
-        // IMF and World Bank API Endpoints for various indicators
+        // API Endpoints for various indicators
         var endpoints = {
-            "gdp": "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json",
-            "cpi": "https://api.imf.org/external/datamapper/api/v1/indicators/CPI",
-            "debt": "https://api.imf.org/external/datamapper/api/v1/indicators/GXDEBT",
-            "unemployment": "https://api.imf.org/external/datamapper/api/v1/indicators/LUR",
-            "population": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json",
-            "life_expectancy": "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json",
-            "primary_school_enrollment": "https://api.worldbank.org/v2/country/all/indicator/SE.PRM.ENRR?format=json"
+            "public_debt": "https://api.worldbank.org/v2/country/all/indicator/GC.DOD.TOTL.GD.ZS?format=json",
+            "gender_inequality": "https://api.worldbank.org/v2/country/all/indicator/SG.GEN.PARL.ZS?format=json",  // Example proxy for gender inequality
+            "electricity_access": "https://api.worldbank.org/v2/country/all/indicator/EG.ELC.ACCS.ZS?format=json",
+            "poverty_headcount": "https://api.worldbank.org/v2/country/all/indicator/SI.POV.DDAY?format=json",
+            "school_enrollment": "https://api.worldbank.org/v2/country/all/indicator/SE.PRM.ENRR?format=json",
+            "employment_ratio": "https://api.worldbank.org/v2/country/all/indicator/SL.EMP.TOTL.SP.ZS?format=json",
+            "corruption_perceptions": "https://api.transparency.org/cpi"  // Example (you may need another endpoint or manual upload)
         };
 
         var totalEndpoints = Object.keys(endpoints).length;
         var completedRequests = 0;
 
-        // Function to check if all API requests are complete
+        // Function to check if all API requests are done
         function checkAllRequestsDone() {
             if (completedRequests === totalEndpoints) {
                 var tableData = [];
 
-                // Convert masterData to array format Tableau can accept
+                // Convert masterData to array format that Tableau accepts
                 for (var key in masterData) {
                     tableData.push(masterData[key]);
                 }
@@ -61,7 +61,7 @@
 
         // Function to add data to master table by country and date
         function addDataToMaster(country, countryiso3code, date, indicator, value) {
-            var key = countryiso3code + "_" + date;  // Unique key for each country/year combination
+            var key = countryiso3code + "_" + date;  // Unique key for each country/year
 
             if (!masterData[key]) {
                 // Initialize a row for this country/year combination
@@ -69,32 +69,18 @@
                     "country": country,
                     "countryiso3code": countryiso3code,
                     "date": parseInt(date),
-                    "gdp": null,
-                    "cpi": null,
-                    "debt": null,
-                    "unemployment": null,
-                    "population": null,
-                    "life_expectancy": null,
-                    "primary_school_enrollment": null
+                    "public_debt": null,
+                    "gender_inequality": null,
+                    "electricity_access": null,
+                    "poverty_headcount": null,
+                    "school_enrollment": null,
+                    "employment_ratio": null,
+                    "corruption_perceptions": null
                 };
             }
 
-            // Map the value to the correct column (indicator)
-            if (indicator === "gdp") {
-                masterData[key].gdp = value;
-            } else if (indicator === "cpi") {
-                masterData[key].cpi = value;
-            } else if (indicator === "debt") {
-                masterData[key].debt = value;
-            } else if (indicator === "unemployment") {
-                masterData[key].unemployment = value;
-            } else if (indicator === "population") {
-                masterData[key].population = value;
-            } else if (indicator === "life_expectancy") {
-                masterData[key].life_expectancy = value;
-            } else if (indicator === "primary_school_enrollment") {
-                masterData[key].primary_school_enrollment = value;
-            }
+            // Map the value to the correct column based on the indicator
+            masterData[key][indicator] = value;
         }
 
         // Fetch data from all endpoints
@@ -132,7 +118,7 @@
     // Initialize Tableau and submit connection when the button is clicked
     $(document).ready(function () {
         $("#submitButton").click(function () {
-            tableau.connectionName = "Economic Indicators Data";
+            tableau.connectionName = "HDI Factors Data";
             tableau.submit();
         });
     });
