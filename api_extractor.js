@@ -2,7 +2,7 @@
     var myConnector = tableau.makeConnector();
 
     myConnector.getSchema = function (schemaCallback) {
-         var cols = [
+        var cols = [
             { id: "country", dataType: tableau.dataTypeEnum.string },
             { id: "countryiso3code", dataType: tableau.dataTypeEnum.string },
             { id: "date", dataType: tableau.dataTypeEnum.int },
@@ -68,10 +68,9 @@
             poverty_rate: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2022&format=json",
             access_to_electricity: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2022&format=json",
             employment_population_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.EMP.TOTL.SP.ZS?date=2000:2022&format=json",
-};
         };
 
-        var totalEndpoints = Object.keys(endpoints).length;
+        var totalEndpoints = countries.length * Object.keys(endpoints).length;
         var completedRequests = 0;
 
         function checkAllRequestsDone() {
@@ -119,10 +118,10 @@
 
         countries.forEach(function (country) {
             var countryiso3code = country;
-            
+
             Object.keys(endpoints).forEach(function (indicator) {
-                var url = endpoints[indicator].replace(/{country}/g, country).replace(/{countryiso3code}/g, countryiso3code);
-                
+                var url = endpoints[indicator].replace(/{country}/g, countryiso3code);
+
                 $.ajax({
                     url: url,
                     type: 'GET',
@@ -140,7 +139,7 @@
                         checkAllRequestsDone();
                     },
                     error: function (error) {
-                        console.error("API fetch error for indicator " + indicator + " for country " + country, error);
+                        console.error("API fetch error for indicator " + indicator + " for country " + countryiso3code, error);
                         completedRequests++;
                         checkAllRequestsDone();
                     }
@@ -153,7 +152,7 @@
 
     $(document).ready(function () {
         $("#submitButton").click(function () {
-            tableau.connectionName = "API Data";
+            tableau.connectionName = "Human Development Index Data";
             tableau.submit();
         });
     });
