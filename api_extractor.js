@@ -2,10 +2,10 @@
     var myConnector = tableau.makeConnector();
 
     myConnector.getSchema = function (schemaCallback) {
-        var cols = [
+         var cols = [
             { id: "country", dataType: tableau.dataTypeEnum.string },
             { id: "countryiso3code", dataType: tableau.dataTypeEnum.string },
-            { id: "date", dataType: tableau.dataTypeEnum.string }, // Changed to string
+            { id: "date", dataType: tableau.dataTypeEnum.int },
             { id: "public_debt", alias: "Public Debt (% of GDP)", dataType: tableau.dataTypeEnum.float },
             { id: "gender_inequality", alias: "Gender Inequality Index", dataType: tableau.dataTypeEnum.float },
             { id: "electricity_access", alias: "Access to Electricity (% of population)", dataType: tableau.dataTypeEnum.float },
@@ -68,6 +68,7 @@
             poverty_rate: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2022&format=json",
             access_to_electricity: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2022&format=json",
             employment_population_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.EMP.TOTL.SP.ZS?date=2000:2022&format=json",
+};
         };
 
         var totalEndpoints = Object.keys(endpoints).length;
@@ -76,9 +77,11 @@
         function checkAllRequestsDone() {
             if (completedRequests === totalEndpoints) {
                 var tableData = [];
+
                 for (var key in masterData) {
                     tableData.push(masterData[key]);
                 }
+
                 table.appendRows(tableData);
                 doneCallback();
             }
@@ -91,7 +94,7 @@
                 masterData[key] = {
                     country: country,
                     countryiso3code: countryiso3code,
-                    date: date, // Kept as string
+                    date: parseInt(date),
                     public_debt: null,
                     gender_inequality: null,
                     electricity_access: null,
@@ -118,18 +121,18 @@
             var countryiso3code = country;
             
             Object.keys(endpoints).forEach(function (indicator) {
-                var url = endpoints[indicator].replace("{country}", country);
+                var url = endpoints[indicator].replace(/{country}/g, country).replace(/{countryiso3code}/g, countryiso3code);
                 
                 $.ajax({
                     url: url,
+                    type: 'GET',
+                    dataType: 'json',
                     success: function (data) {
                         if (data && data[1]) {
                             data[1].forEach(function (entry) {
                                 if (entry.date) {
-                                    var value = parseFloat(entry.value);
-                                    if (!isNaN(value)) {
-                                        addDataToMaster(entry.country.value, entry.countryiso3code, entry.date, indicator, value);
-                                    }
+                                    var value = parseFloat(entry.value) || null;
+                                    addDataToMaster(entry.country.value, entry.countryiso3code, entry.date, indicator, value);
                                 }
                             });
                         }
