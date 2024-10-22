@@ -2,7 +2,7 @@
     var myConnector = tableau.makeConnector();
 
     myConnector.getSchema = function (schemaCallback) {
-        var cols = [
+         var cols = [
             { id: "country", dataType: tableau.dataTypeEnum.string },
             { id: "countryiso3code", dataType: tableau.dataTypeEnum.string },
             { id: "date", dataType: tableau.dataTypeEnum.int },
@@ -20,7 +20,6 @@
             { id: "poverty_rate", alias: "Poverty Rate", dataType: tableau.dataTypeEnum.float },
             { id: "access_to_electricity", alias: "Access to Electricity (%)", dataType: tableau.dataTypeEnum.float },
             { id: "employment_population_ratio", alias: "Employment to Population Ratio", dataType: tableau.dataTypeEnum.float },
-];
         ];
 
         var tableSchema = {
@@ -110,7 +109,6 @@
                     poverty_rate: null,
                     access_to_electricity: null,
                     employment_population_ratio: null,
-                    
                 };
             }
 
