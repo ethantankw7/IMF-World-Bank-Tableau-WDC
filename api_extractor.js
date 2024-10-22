@@ -81,19 +81,17 @@
             if (completedRequests === totalEndpoints) {
                 var tableData = [];
 
-                // Convert masterData to array format Tableau can accept
                 for (var key in masterData) {
                     tableData.push(masterData[key]);
                 }
 
-                // Append rows and signal Tableau that data fetching is done
                 table.appendRows(tableData);
                 doneCallback();
             }
         }
 
         function addDataToMaster(country, countryiso3code, date, indicator, value) {
-            var key = countryiso3code + "_" + date;  // Unique key for each country/year combination
+            var key = countryiso3code + "_" + date;
 
             if (!masterData[key]) {
                 masterData[key] = {
@@ -107,18 +105,25 @@
                     school_enrollment: null,
                     employment_ratio: null,
                     gdp: null,
-                    unemployment: null
+                    unemployment: null,
+                    life_expectancy: null,
+                    infant_mortality: null,
+                    maternal_mortality: null,
+                    poverty_rate: null,
+                    public_debt: null,
+                    access_to_electricity: null,
+                    employment_population_ratio: null,
+                    
                 };
             }
 
-            // Map the value to the correct column (indicator)
             if (indicator) {
                 masterData[key][indicator] = value;
             }
         }
 
         countries.forEach(function (country) {
-            var countryiso3code = country; // Assuming iso3 code is the same as the code in countries array
+            var countryiso3code = country;
             
             Object.keys(endpoints).forEach(function (indicator) {
                 var url = endpoints[indicator].replace(/{country}/g, country).replace(/{countryiso3code}/g, countryiso3code);
