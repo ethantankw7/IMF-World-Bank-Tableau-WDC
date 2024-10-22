@@ -68,7 +68,6 @@
             poverty_rate: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2022&format=json",
             access_to_electricity: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2022&format=json",
             employment_population_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.EMP.TOTL.SP.ZS?date=2000:2022&format=json",
-};
         };
 
         var totalEndpoints = Object.keys(endpoints).length;
@@ -121,12 +120,10 @@
             var countryiso3code = country;
             
             Object.keys(endpoints).forEach(function (indicator) {
-                var url = endpoints[indicator].replace(/{country}/g, country).replace(/{countryiso3code}/g, countryiso3code);
+                var url = endpoints[indicator].replace("{country}", country);
                 
                 $.ajax({
                     url: url,
-                    type: 'GET',
-                    dataType: 'json',
                     success: function (data) {
                         if (data && data[1]) {
                             data[1].forEach(function (entry) {
