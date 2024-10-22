@@ -7,11 +7,13 @@
             { id: "country", dataType: tableau.dataTypeEnum.string },
             { id: "countryiso3code", dataType: tableau.dataTypeEnum.string },
             { id: "date", dataType: tableau.dataTypeEnum.int },
-            { id: "indicator", alias: "Indicator", dataType: tableau.dataTypeEnum.string },
-            { id: "value", alias: "Value", dataType: tableau.dataTypeEnum.float },
-            { id: "source", alias: "Source", dataType: tableau.dataTypeEnum.string },
-            { id: "unit", alias: "Unit", dataType: tableau.dataTypeEnum.string },
-            { id: "dataset", alias: "Dataset", dataType: tableau.dataTypeEnum.string }
+            { id: "gdp", alias: "GDP", dataType: tableau.dataTypeEnum.float },
+            { id: "cpi", alias: "CPI", dataType: tableau.dataTypeEnum.float },
+            { id: "debt", alias: "Debt", dataType: tableau.dataTypeEnum.float },
+            { id: "unemployment", alias: "Unemployment", dataType: tableau.dataTypeEnum.float },
+            { id: "population", alias: "Population", dataType: tableau.dataTypeEnum.float },
+            { id: "life_expectancy", alias: "Life Expectancy", dataType: tableau.dataTypeEnum.float },
+            { id: "primary_school_enrollment", alias: "Primary School Enrollment", dataType: tableau.dataTypeEnum.float }
         ];
 
         var tableSchema = {
@@ -25,63 +27,88 @@
 
     // Function to fetch and process data
     myConnector.getData = function (table, doneCallback) {
-        var imfEndpoints = [
-            "https://www.imf.org/external/datamapper/api/v1/indicators/GDP",
-            "https://www.imf.org/external/datamapper/api/v1/indicators/CPI",
-            "https://www.imf.org/external/datamapper/api/v1/indicators/GXDEBT",
-            "https://www.imf.org/external/datamapper/api/v1/indicators/LUR"
-        ];
+        var masterData = {};
 
-        var worldBankEndpoints = [
-            "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json",
-            "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json",
-            "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json",
-            "https://api.worldbank.org/v2/country/all/indicator/SE.PRM.ENRR?format=json"
-        ];
+        // IMF API Endpoints
+        var imfEndpoints = {
+            "gdp": "https://www.imf.org/external/datamapper/api/v1/indicators/GDP",
+            "cpi": "https://www.imf.org/external/datamapper/api/v1/indicators/CPI",
+            "debt": "https://www.imf.org/external/datamapper/api/v1/indicators/GXDEBT",
+            "unemployment": "https://www.imf.org/external/datamapper/api/v1/indicators/LUR"
+        };
 
-        var tableData = [];
-        var totalEndpoints = imfEndpoints.length + worldBankEndpoints.length;
-        var completedRequests = 0; // Track completed API requests
+        // World Bank API Endpoints
+        var worldBankEndpoints = {
+            "population": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json",
+            "gdp": "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json",
+            "life_expectancy": "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json",
+            "primary_school_enrollment": "https://api.worldbank.org/v2/country/all/indicator/SE.PRM.ENRR?format=json"
+        };
+
+        var totalEndpoints = Object.keys(imfEndpoints).length + Object.keys(worldBankEndpoints).length;
+        var completedRequests = 0;
 
         // Function to check if all API requests are complete
         function checkAllRequestsDone() {
             if (completedRequests === totalEndpoints) {
+                var tableData = [];
+
+                // Convert masterData to array format Tableau can accept
+                for (var key in masterData) {
+                    tableData.push(masterData[key]);
+                }
+
                 // Append rows and signal Tableau that data fetching is done
                 table.appendRows(tableData);
                 doneCallback();
             }
         }
 
+        // Function to add data to master table by country and date
+        function addDataToMaster(country, countryiso3code, date, indicator, value) {
+            var key = countryiso3code + "_" + date;  // Unique key for each country/year combination
+
+            if (!masterData[key]) {
+                masterData[key] = {
+                    "country": country,
+                    "countryiso3code": countryiso3code,
+                    "date": parseInt(date),
+                    "gdp": null,
+                    "cpi": null,
+                    "debt": null,
+                    "unemployment": null,
+                    "population": null,
+                    "life_expectancy": null,
+                    "primary_school_enrollment": null
+                };
+            }
+
+            masterData[key][indicator] = value;
+        }
+
         // Fetch data from IMF endpoints
-        imfEndpoints.forEach(function (url) {
+        Object.keys(imfEndpoints).forEach(function (indicator) {
+            var url = imfEndpoints[indicator];
             $.getJSON(url, function (imfData) {
                 if (imfData && imfData.data) {
-                    imfData.data.forEach(function (indicator) {
-                        if (indicator.country && indicator.date) {
-                            tableData.push({
-                                "country": indicator.country || "N/A",
-                                "countryiso3code": indicator.countryiso3code || "N/A",
-                                "date": parseInt(indicator.date) || null,
-                                "indicator": indicator.label || "N/A",
-                                "value": parseFloat(indicator.value) || null,
-                                "source": "IMF",
-                                "unit": indicator.unit || "N/A",
-                                "dataset": "IMF"
-                            });
+                    imfData.data.forEach(function (entry) {
+                        if (entry.country && entry.date) {
+                            addDataToMaster(entry.country, entry.countryiso3code, entry.date, indicator, parseFloat(entry.value) || null);
                         }
                     });
                 }
-                completedRequests++; // Increment on each successful request
-                checkAllRequestsDone(); // Check if all requests are done
+                completedRequests++;
+                checkAllRequestsDone();
             }).fail(function (error) {
                 console.error("IMF API fetch error", error);
-                completedRequests++; // Increment even on failure
+                completedRequests++;
                 checkAllRequestsDone();
             });
         });
 
         // Fetch data from World Bank endpoints
-        worldBankEndpoints.forEach(function (url) {
+        Object.keys(worldBankEndpoints).forEach(function (indicator) {
+            var url = worldBankEndpoints[indicator];
             $.ajax({
                 url: url,
                 type: 'GET',
@@ -90,25 +117,16 @@
                     if (wbData && wbData[1]) {
                         wbData[1].forEach(function (entry) {
                             if (entry.country && entry.date) {
-                                tableData.push({
-                                    "country": entry.country.value,
-                                    "countryiso3code": entry.countryiso3code,
-                                    "date": parseInt(entry.date),
-                                    "indicator": entry.indicator.value,
-                                    "value": entry.value !== null ? parseFloat(entry.value) : null,
-                                    "source": "World Bank",
-                                    "unit": entry.unit || "",
-                                    "dataset": "World Bank"
-                                });
+                                addDataToMaster(entry.country.value, entry.countryiso3code, entry.date, indicator, parseFloat(entry.value) || null);
                             }
                         });
                     }
-                    completedRequests++; // Increment on each successful request
-                    checkAllRequestsDone(); // Check if all requests are done
+                    completedRequests++;
+                    checkAllRequestsDone();
                 },
                 error: function (error) {
                     console.error("World Bank API fetch error", error);
-                    completedRequests++; // Increment even on failure
+                    completedRequests++;
                     checkAllRequestsDone();
                 }
             });
@@ -121,8 +139,8 @@
     // Initialize Tableau and submit connection when the button is clicked
     $(document).ready(function () {
         $("#submitButton").click(function () {
-            tableau.connectionName = "Economic Indicators Data"; // Set the connection name
-            tableau.submit(); // This will initiate the data fetching process
+            tableau.connectionName = "Economic Indicators Data";  // Set the connection name
+            tableau.submit();  // This will initiate the data fetching process
         });
     });
 })();
