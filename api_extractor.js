@@ -13,7 +13,15 @@
             { id: "school_enrollment", alias: "School Enrollment Rate", dataType: tableau.dataTypeEnum.float },
             { id: "employment_ratio", alias: "Employment to Population Ratio", dataType: tableau.dataTypeEnum.float },
             { id: "gdp", alias: "GDP (current US$)", dataType: tableau.dataTypeEnum.float },
-            { id: "unemployment", alias: "Unemployment Rate", dataType: tableau.dataTypeEnum.float }
+            { id: "unemployment", alias: "Unemployment Rate", dataType: tableau.dataTypeEnum.float },
+            { id: "life_expectancy", alias: "Life Expectancy at Birth", dataType: tableau.dataTypeEnum.float },
+            { id: "infant_mortality", alias: "Infant Mortality Rate", dataType: tableau.dataTypeEnum.float },
+            { id: "maternal_mortality", alias: "Maternal Mortality Ratio", dataType: tableau.dataTypeEnum.float },
+            { id: "poverty_rate", alias: "Poverty Rate", dataType: tableau.dataTypeEnum.float },
+            { id: "public_debt", alias: "Public Debt (% of GDP)", dataType: tableau.dataTypeEnum.float },
+            { id: "access_to_electricity", alias: "Access to Electricity (%)", dataType: tableau.dataTypeEnum.float },
+            { id: "employment_population_ratio", alias: "Employment to Population Ratio", dataType: tableau.dataTypeEnum.float },
+];
         ];
 
         var tableSchema = {
@@ -47,16 +55,23 @@
             "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"
         ];
 
-        // API endpoints with corrected URLs
         var endpoints = {
-            public_debt: "https://api.worldbank.org/v2/country/{country}/indicator/GC.DOD.TOTL.GD.ZS?date=2000:2023&format=json",
-            gender_inequality: "https://api.worldbank.org/v2/country/{country}/indicator/SG.GEN.PARL.ZS?date=2000:2023&format=json",
-            electricity_access: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2023&format=json",
-            poverty_headcount: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2023&format=json",
-            school_enrollment: "https://api.worldbank.org/v2/country/{country}/indicator/SE.PRM.ENRR?date=2000:2023&format=json",
-            employment_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.UEM.TOTL.ZS?date=2000:2023&format=json",
-            gdp: "https://api.worldbank.org/v2/country/{country}/indicator/NY.GDP.MKTP.CD?date=2000:2023&format=json",
-            unemployment: "https://api.worldbank.org/v2/country/{country}/indicator/SL.UEM.TOTL.ZS?date=2000:2023&format=json"
+            public_debt: "https://api.worldbank.org/v2/country/{country}/indicator/GC.DOD.TOTL.GD.ZS?date=2000:2022&format=json",
+            gender_inequality: "https://api.worldbank.org/v2/country/{country}/indicator/SG.GEN.PARL.ZS?date=2000:2022&format=json",
+            electricity_access: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2022&format=json",
+            poverty_headcount: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2022&format=json",
+            school_enrollment: "https://api.worldbank.org/v2/country/{country}/indicator/SE.PRM.ENRR?date=2000:2022&format=json",
+            employment_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.UEM.TOTL.ZS?date=2000:2022&format=json",
+            gdp: "https://api.worldbank.org/v2/country/{country}/indicator/NY.GDP.MKTP.CD?date=2000:2022&format=json",
+            unemployment: "https://api.worldbank.org/v2/country/{country}/indicator/SL.UEM.TOTL.ZS?date=2000:2022&format=json",
+            life_expectancy: "https://api.worldbank.org/v2/country/{country}/indicator/SP.DYN.LE00.IN?date=2000:2022&format=json",
+            infant_mortality: "https://api.worldbank.org/v2/country/{country}/indicator/SH.DYN.MORT?date=2000:2022&format=json",
+            maternal_mortality: "https://api.worldbank.org/v2/country/{country}/indicator/SH.STA.MMRT?date=2000:2022&format=json",
+            poverty_rate: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2022&format=json",
+            public_debt: "https://api.worldbank.org/v2/country/{country}/indicator/GC.DOD.TOTL.GD.ZS?date=2000:2022&format=json",
+            access_to_electricity: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2022&format=json",
+            employment_population_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.EMP.TOTL.SP.ZS?date=2000:2022&format=json",
+};
         };
 
         var totalEndpoints = Object.keys(endpoints).length;
