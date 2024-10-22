@@ -1,7 +1,7 @@
 (function () {
     var myConnector = tableau.makeConnector();
 
-    // Schema definition for the data being pulled from IMF and World Bank
+    // Define the schema: country, year, and individual columns for each indicator
     myConnector.getSchema = function (schemaCallback) {
         var cols = [
             { id: "country", dataType: tableau.dataTypeEnum.string },
@@ -29,23 +29,18 @@
     myConnector.getData = function (table, doneCallback) {
         var masterData = {};
 
-        // IMF API Endpoints
-        var imfEndpoints = {
-            "gdp": "https://www.imf.org/external/datamapper/api/v1/indicators/GDP",
-            "cpi": "https://www.imf.org/external/datamapper/api/v1/indicators/CPI",
-            "debt": "https://www.imf.org/external/datamapper/api/v1/indicators/GXDEBT",
-            "unemployment": "https://www.imf.org/external/datamapper/api/v1/indicators/LUR"
-        };
-
-        // World Bank API Endpoints
-        var worldBankEndpoints = {
-            "population": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json",
+        // IMF and World Bank API Endpoints for various indicators
+        var endpoints = {
             "gdp": "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json",
+            "cpi": "https://api.imf.org/external/datamapper/api/v1/indicators/CPI",
+            "debt": "https://api.imf.org/external/datamapper/api/v1/indicators/GXDEBT",
+            "unemployment": "https://api.imf.org/external/datamapper/api/v1/indicators/LUR",
+            "population": "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json",
             "life_expectancy": "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json",
             "primary_school_enrollment": "https://api.worldbank.org/v2/country/all/indicator/SE.PRM.ENRR?format=json"
         };
 
-        var totalEndpoints = Object.keys(imfEndpoints).length + Object.keys(worldBankEndpoints).length;
+        var totalEndpoints = Object.keys(endpoints).length;
         var completedRequests = 0;
 
         // Function to check if all API requests are complete
@@ -69,6 +64,7 @@
             var key = countryiso3code + "_" + date;  // Unique key for each country/year combination
 
             if (!masterData[key]) {
+                // Initialize a row for this country/year combination
                 masterData[key] = {
                     "country": country,
                     "countryiso3code": countryiso3code,
@@ -83,41 +79,38 @@
                 };
             }
 
-            masterData[key][indicator] = value;
+            // Map the value to the correct column (indicator)
+            if (indicator === "gdp") {
+                masterData[key].gdp = value;
+            } else if (indicator === "cpi") {
+                masterData[key].cpi = value;
+            } else if (indicator === "debt") {
+                masterData[key].debt = value;
+            } else if (indicator === "unemployment") {
+                masterData[key].unemployment = value;
+            } else if (indicator === "population") {
+                masterData[key].population = value;
+            } else if (indicator === "life_expectancy") {
+                masterData[key].life_expectancy = value;
+            } else if (indicator === "primary_school_enrollment") {
+                masterData[key].primary_school_enrollment = value;
+            }
         }
 
-        // Fetch data from IMF endpoints
-        Object.keys(imfEndpoints).forEach(function (indicator) {
-            var url = imfEndpoints[indicator];
-            $.getJSON(url, function (imfData) {
-                if (imfData && imfData.data) {
-                    imfData.data.forEach(function (entry) {
-                        if (entry.country && entry.date) {
-                            addDataToMaster(entry.country, entry.countryiso3code, entry.date, indicator, parseFloat(entry.value) || null);
-                        }
-                    });
-                }
-                completedRequests++;
-                checkAllRequestsDone();
-            }).fail(function (error) {
-                console.error("IMF API fetch error", error);
-                completedRequests++;
-                checkAllRequestsDone();
-            });
-        });
+        // Fetch data from all endpoints
+        Object.keys(endpoints).forEach(function (indicator) {
+            var url = endpoints[indicator];
 
-        // Fetch data from World Bank endpoints
-        Object.keys(worldBankEndpoints).forEach(function (indicator) {
-            var url = worldBankEndpoints[indicator];
             $.ajax({
                 url: url,
                 type: 'GET',
                 dataType: 'json',
-                success: function (wbData) {
-                    if (wbData && wbData[1]) {
-                        wbData[1].forEach(function (entry) {
+                success: function (data) {
+                    if (data && data[1]) {
+                        data[1].forEach(function (entry) {
                             if (entry.country && entry.date) {
-                                addDataToMaster(entry.country.value, entry.countryiso3code, entry.date, indicator, parseFloat(entry.value) || null);
+                                var value = parseFloat(entry.value) || null;
+                                addDataToMaster(entry.country.value, entry.countryiso3code, entry.date, indicator, value);
                             }
                         });
                     }
@@ -125,7 +118,7 @@
                     checkAllRequestsDone();
                 },
                 error: function (error) {
-                    console.error("World Bank API fetch error", error);
+                    console.error("API fetch error for indicator " + indicator, error);
                     completedRequests++;
                     checkAllRequestsDone();
                 }
@@ -139,8 +132,8 @@
     // Initialize Tableau and submit connection when the button is clicked
     $(document).ready(function () {
         $("#submitButton").click(function () {
-            tableau.connectionName = "Economic Indicators Data";  // Set the connection name
-            tableau.submit();  // This will initiate the data fetching process
+            tableau.connectionName = "Economic Indicators Data";
+            tableau.submit();
         });
     });
 })();
