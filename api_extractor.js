@@ -12,14 +12,13 @@
             { id: "poverty_headcount", alias: "Poverty Headcount Ratio", dataType: tableau.dataTypeEnum.float },
             { id: "school_enrollment", alias: "School Enrollment Rate", dataType: tableau.dataTypeEnum.float },
             { id: "employment_ratio", alias: "Employment to Population Ratio", dataType: tableau.dataTypeEnum.float },
-            { id: "corruption_perceptions", alias: "Corruption Perceptions Index (CPI)", dataType: tableau.dataTypeEnum.float },
             { id: "gdp", alias: "GDP (current US$)", dataType: tableau.dataTypeEnum.float },
             { id: "unemployment", alias: "Unemployment Rate", dataType: tableau.dataTypeEnum.float }
         ];
 
         var tableSchema = {
             id: "hdiFactors",
-            alias: "HDI Factors Data",
+            alias: "API Data",
             columns: cols
         };
 
@@ -48,15 +47,14 @@
             "UZB", "VUT", "VEN", "VNM", "YEM", "ZMB", "ZWE"
         ];
 
-        // Replace the following URLs with the appropriate API endpoints for your data
+        // API endpoints with corrected URLs
         var endpoints = {
-            public_debt: "https://api.worldbank.org/v2/country/{country}/indicator/GC.DYN.DEBT.GD.ZS?date=2000:2023&format=json",
+            public_debt: "https://api.worldbank.org/v2/country/{country}/indicator/GC.DOD.TOTL.GD.ZS?date=2000:2023&format=json",
             gender_inequality: "https://api.worldbank.org/v2/country/{country}/indicator/SG.GEN.PARL.ZS?date=2000:2023&format=json",
             electricity_access: "https://api.worldbank.org/v2/country/{country}/indicator/EG.ELC.ACCS.ZS?date=2000:2023&format=json",
             poverty_headcount: "https://api.worldbank.org/v2/country/{country}/indicator/SI.POV.DDAY?date=2000:2023&format=json",
             school_enrollment: "https://api.worldbank.org/v2/country/{country}/indicator/SE.PRM.ENRR?date=2000:2023&format=json",
             employment_ratio: "https://api.worldbank.org/v2/country/{country}/indicator/SL.UEM.TOTL.ZS?date=2000:2023&format=json",
-            corruption_perceptions: "https://api.transparency.org/en/cpi/2023/index?country={countryiso3code}&format=json",
             gdp: "https://api.worldbank.org/v2/country/{country}/indicator/NY.GDP.MKTP.CD?date=2000:2023&format=json",
             unemployment: "https://api.worldbank.org/v2/country/{country}/indicator/SL.UEM.TOTL.ZS?date=2000:2023&format=json"
         };
@@ -93,7 +91,6 @@
                     poverty_headcount: null,
                     school_enrollment: null,
                     employment_ratio: null,
-                    corruption_perceptions: null,
                     gdp: null,
                     unemployment: null
                 };
