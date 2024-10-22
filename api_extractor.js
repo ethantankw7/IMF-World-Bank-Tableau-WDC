@@ -1,8 +1,6 @@
 (function () {
-    // Create the connector object
     var myConnector = tableau.makeConnector();
 
-    // Define the schema for the data
     myConnector.getSchema = function (schemaCallback) {
         var cols = [
             { id: "label", dataType: tableau.dataTypeEnum.string },
@@ -28,38 +26,53 @@
         schemaCallback([tableSchema]);
     };
 
-    // Fetch and process the data
     myConnector.getData = function (table, doneCallback) {
-        var imfApiUrl = "https://www.imf.org/external/datamapper/api/v1/indicators";
-        var worldBankApiUrl = "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json";
+        var imfEndpoints = [
+            "https://www.imf.org/external/datamapper/api/v1/indicators/GDP",
+            "https://www.imf.org/external/datamapper/api/v1/indicators/CPI",
+            "https://www.imf.org/external/datamapper/api/v1/indicators/GXDEBT",
+            "https://www.imf.org/external/datamapper/api/v1/indicators/LUR"
+        ];
+        
+        var worldBankEndpoints = [
+            "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json",
+            "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json",
+            "https://api.worldbank.org/v2/country/all/indicator/SP.DYN.LE00.IN?format=json",
+            "https://api.worldbank.org/v2/country/all/indicator/SE.PRM.ENRR?format=json"
+        ];
+
         var tableData = [];
 
-        // Fetch IMF data
-        $.getJSON(imfApiUrl, function (imfData) {
-            if (imfData && imfData.data) {
-                var indicators = imfData.data;
-
-                indicators.forEach(function (indicator) {
-                    tableData.push({
-                        "label": indicator.label || "N/A",
-                        "description": indicator.description || "N/A",
-                        "source": indicator.source || "IMF",
-                        "unit": indicator.unit || "N/A",
-                        "dataset": "IMF",
-                        "indicator": "N/A",
-                        "country": "N/A",
-                        "countryiso3code": "N/A",
-                        "date": "N/A",
-                        "value": null,
-                        "obs_status": "N/A",
-                        "decimal": 0
+        // Fetch data from IMF endpoints
+        imfEndpoints.forEach(function (url) {
+            $.getJSON(url, function (imfData) {
+                if (imfData && imfData.data) {
+                    imfData.data.forEach(function (indicator) {
+                        tableData.push({
+                            "label": indicator.label || "N/A",
+                            "description": indicator.description || "N/A",
+                            "source": "IMF",
+                            "unit": indicator.unit || "N/A",
+                            "dataset": "IMF",
+                            "indicator": indicator.label || "N/A",
+                            "country": "N/A",
+                            "countryiso3code": "N/A",
+                            "date": "N/A",
+                            "value": null,
+                            "obs_status": "N/A",
+                            "decimal": 0
+                        });
                     });
-                });
-            }
+                }
+            }).fail(function (error) {
+                console.error("IMF API fetch error", error);
+            });
+        });
 
-            // Fetch World Bank data
+        // Fetch data from World Bank endpoints
+        worldBankEndpoints.forEach(function (url) {
             $.ajax({
-                url: worldBankApiUrl,
+                url: url,
                 type: 'GET',
                 dataType: 'json',
                 success: function (wbData) {
@@ -81,20 +94,16 @@
                             });
                         });
                     }
-
-                    table.appendRows(tableData);
-                    doneCallback();
                 },
                 error: function (error) {
                     console.error("World Bank API fetch error", error);
-                    doneCallback();
                 }
             });
-        }).fail(function (error) {
-            console.error("IMF API fetch error", error);
-            doneCallback();
         });
+
+        table.appendRows(tableData);
+        doneCallback();
     };
 
-    // Register the connector
-    tableau.registerConnect
+    tableau.registerConnector(myConnector);
+})();
