@@ -1,6 +1,7 @@
 (function () {
     var myConnector = tableau.makeConnector();
 
+    // Schema definition for the data being pulled from IMF and World Bank
     myConnector.getSchema = function (schemaCallback) {
         var cols = [
             { id: "label", dataType: tableau.dataTypeEnum.string },
@@ -11,7 +12,7 @@
             { id: "indicator", alias: "Indicator", dataType: tableau.dataTypeEnum.string },
             { id: "country", dataType: tableau.dataTypeEnum.string },
             { id: "countryiso3code", dataType: tableau.dataTypeEnum.string },
-            { id: "date", dataType: tableau.dataTypeEnum.date },
+            { id: "date", dataType: tableau.dataTypeEnum.int },
             { id: "value", alias: "Value", dataType: tableau.dataTypeEnum.float },
             { id: "obs_status", alias: "Observation Status", dataType: tableau.dataTypeEnum.string },
             { id: "decimal", alias: "Decimal", dataType: tableau.dataTypeEnum.int }
@@ -26,6 +27,7 @@
         schemaCallback([tableSchema]);
     };
 
+    // Function to fetch and process data
     myConnector.getData = function (table, doneCallback) {
         var imfEndpoints = [
             "https://www.imf.org/external/datamapper/api/v1/indicators/GDP",
@@ -33,7 +35,7 @@
             "https://www.imf.org/external/datamapper/api/v1/indicators/GXDEBT",
             "https://www.imf.org/external/datamapper/api/v1/indicators/LUR"
         ];
-        
+
         var worldBankEndpoints = [
             "https://api.worldbank.org/v2/country/all/indicator/SP.POP.TOTL?format=json",
             "https://api.worldbank.org/v2/country/all/indicator/NY.GDP.MKTP.CD?format=json",
@@ -42,6 +44,17 @@
         ];
 
         var tableData = [];
+        var totalEndpoints = imfEndpoints.length + worldBankEndpoints.length;
+        var completedRequests = 0; // Track completed API requests
+
+        // Function to check if all API requests are complete
+        function checkAllRequestsDone() {
+            if (completedRequests === totalEndpoints) {
+                // Append rows and signal Tableau that data fetching is done
+                table.appendRows(tableData);
+                doneCallback();
+            }
+        }
 
         // Fetch data from IMF endpoints
         imfEndpoints.forEach(function (url) {
@@ -64,8 +77,12 @@
                         });
                     });
                 }
+                completedRequests++; // Increment on each successful request
+                checkAllRequestsDone(); // Check if all requests are done
             }).fail(function (error) {
                 console.error("IMF API fetch error", error);
+                completedRequests++; // Increment even on failure
+                checkAllRequestsDone();
             });
         });
 
@@ -87,23 +104,33 @@
                                 "indicator": entry.indicator.value,
                                 "country": entry.country.value,
                                 "countryiso3code": entry.countryiso3code,
-                                "date": entry.date ? new Date(entry.date).getFullYear() : null,
+                                "date": entry.date ? parseInt(entry.date) : null,
                                 "value": entry.value !== null ? parseFloat(entry.value) : null,
                                 "obs_status": entry.obs_status || "",
                                 "decimal": entry.decimal || 0
                             });
                         });
                     }
+                    completedRequests++; // Increment on each successful request
+                    checkAllRequestsDone(); // Check if all requests are done
                 },
                 error: function (error) {
                     console.error("World Bank API fetch error", error);
+                    completedRequests++; // Increment even on failure
+                    checkAllRequestsDone();
                 }
             });
         });
-
-        table.appendRows(tableData);
-        doneCallback();
     };
 
+    // Register the connector
     tableau.registerConnector(myConnector);
+
+    // Initialize Tableau and submit connection when the button is clicked
+    $(document).ready(function () {
+        $("#submitButton").click(function () {
+            tableau.connectionName = "Economic Indicators Data"; // Set the connection name
+            tableau.submit(); // This will initiate the data fetching process
+        });
+    });
 })();
